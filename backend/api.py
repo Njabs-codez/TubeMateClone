@@ -3,18 +3,33 @@ from pathlib import Path
 from fastapi import FastAPI, Response, status
 from fastapi.responses import FileResponse, StreamingResponse
 from tubeMate import merge_audio_to_video, MergeError
+from fastapi.middleware.cors import CORSMiddleware
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 INPUT_DIR = BASE_DIR / "in"
 OUTPUT_DIR = BASE_DIR / "out"
 
 app = FastAPI()
+origins = ["http://localhost:5173/", 
+           "http://127.0.0.1:5173/", 
+           "https://localhost:5173/",
+           "https://127.0.0.1:5173/"]
+
+app.add_middleware(CORSMiddleware,
+                   allow_origins=origins,
+                   allow_credentials=True,
+                   allow_methods=['*'],
+                   allow_headers=['*'])
 
 def validate_url(url):
     if "https://www.youtube.com/watch?v" in url or "https://youtu.be/" in url:
         return True
     return False
 
+@app.get('/')
+def hello_world():
+    return {"greetings" : "Hello, World!"}
 
 @app.get("/get-video-info", status_code=200)
 def video_info(url:str, res:Response):
