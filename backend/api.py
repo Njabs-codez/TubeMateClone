@@ -2,9 +2,9 @@ from pytubefix import YouTube
 from pathlib import Path
 from fastapi import FastAPI, Response, status
 from fastapi.responses import FileResponse, StreamingResponse
-from tubeMate import merge_audio_to_video
+from tubeMate import merge_audio_to_video, MergeError
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 INPUT_DIR = BASE_DIR / "in"
 OUTPUT_DIR = BASE_DIR / "out"
 
@@ -15,33 +15,6 @@ def validate_url(url):
         return True
     return False
 
-def download_and_merge(url, qual):
-    yt = YouTube(url)
-    try:
-        yt.check_availability()
-        
-        video = yt.streams.filter(res=qual, mime_type="video/mp4", adaptive=True).first()
-        audio = yt.streams.filter(only_audio=True, mime_type="audio/mp4", adaptive=True).order_by("abr").desc().first()
-        
-        print(video)
-        video.download(str(INPUT_DIR))
-        print("video download complete!!")
-        
-        print(audio)
-        audio.download(str(INPUT_DIR))
-        print("Audio download complete!!")
-    
-        files = []
-        for file in INPUT_DIR.iterdir():
-            if file.is_file():
-                files.append(str(file))
-        
-        outName = f"{yt.title}({qual})"
-
-        merge_audio_to_video(files[0], files[1], outName)
-
-    except:
-        print("An error occured")
 
 @app.get("/get-video-info", status_code=200)
 def video_info(url:str, res:Response):
@@ -60,6 +33,49 @@ def video_info(url:str, res:Response):
         "thumbnail" : yt.thumbnail_url
     }
 
+def download_and_merge(url, qual) -> str:
+    yt = YouTube(url)
+    try:
+        yt.check_availability()
+        
+        video = yt.streams.filter(res=qual, mime_type="video/mp4", adaptive=True).first()
+        audio = yt.streams.filter(only_audio=True, mime_type="audio/mp4", adaptive=True).order_by("abr").desc().first()
+        
+        outName = f"{yt.title}({qual})"
+        in_dir = INPUT_DIR / outName
+        print(video)
+        video.download(str(in_dir))
+        print("video download complete!!")
+        
+        print(audio)
+        audio.download(str(in_dir))
+        print("Audio download complete!!")
+    
+        files = []
+        for file in in_dir.iterdir():
+            if file.is_file():
+                files.append(str(file))
+
+        merge_audio_to_video(files[0], files[1], outName)
+
+        return outName
+
+    except MergeError as e:
+        print("An error occured")
+        raise e
+
+def outFile_generator(fileName:str):
+    file_dir = OUTPUT_DIR / fileName
+    try:
+        for file in file_dir.iterdir():
+            with open(str(file), mode="rb") as out:
+                yield from out
+
+    finally:
+        for item in file_dir.iterdir():
+            if item.is_file():
+                item.unlink()
+        file_dir.rmdir()
 
 @app.get("/get-video", status_code=200)
 def send_video(url:str, qual:str, res:Response):
@@ -70,8 +86,20 @@ def send_video(url:str, qual:str, res:Response):
             "Invalid URL. Please ensure your URL is the formats:\n\t-https://www.youtube.com/watch?v=id\n\t-https://youtu.be/id"
         }
     
-    # this will create the video, which will be found in the out file
-    download_and_merge(url, qual) 
+    try:
+        # this will create the video, which will be found in the out file
+        fileName = download_and_merge(url, qual) 
+        
+        # uses the generator function to stream the file to 
+        return StreamingResponse(outFile_generator(fileName), 
+                                media_type="video/mp4")
+    except MergeError as e:
+        res.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {
+            "message" : "something went wrong while retrieving your video"
+        }
+    
 
+    
 
 

@@ -3,18 +3,22 @@ import subprocess
 from pathlib import Path
 from fastapi.responses import FileResponse, StreamingResponse
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 INPUT_DIR = BASE_DIR / "in"
 OUTPUT_DIR = BASE_DIR / "out"
 
+class MergeError(Exception):
+    pass
 
-def clearInDir():
-    for item in INPUT_DIR.iterdir():
+
+def clearInDir(in_dir: Path):
+    for item in in_dir.iterdir():
         if item.is_file():
             item.unlink()
+    in_dir.rmdir()
 
 def merge_audio_to_video(vid, aud, outname):
-    out = OUTPUT_DIR / f"{outname}.mp4"  
+    out = OUTPUT_DIR / outname / f"{outname}.mp4"
 
     command = [
         'ffmpeg.exe', '-i', vid,
@@ -26,10 +30,13 @@ def merge_audio_to_video(vid, aud, outname):
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as e:
         print("Something went wrong with FFmpeg function")
+        raise subprocess.CalledProcessError()
     except:
         print("Likely file not found twin")
+        raise MergeError("Something went wrong with the merge_audio_to_video function.")
     finally:
-        clearInDir()
+        to_clear: Path = INPUT_DIR / outname
+        clearInDir(to_clear)
 
 
 def main():
@@ -83,23 +90,21 @@ def main():
                 video = yt.streams.filter(res=resolutions[index], mime_type="video/mp4", adaptive=True).first()
                 audio = yt.streams.filter(only_audio=True, mime_type="audio/mp4", adaptive=True).order_by("abr").desc().first()
                 
-                
-                
+                outName = f"{vidName}({resolutions[index]})"
+                in_dir = INPUT_DIR / outName
                 print(video)
-                video.download(str(INPUT_DIR))
+                video.download(str(in_dir))
                 print("video download complete!!")
                 
                 print(audio)
-                audio.download(str(INPUT_DIR))
+                audio.download(str(in_dir))
                 print("Audio download complete!!")
             
                 files = []
-                for file in INPUT_DIR.iterdir():
+                for file in in_dir.iterdir():
                     if file.is_file():
                         files.append(str(file))
                 
-                outName = f"{vidName}({resolutions[index]})"
-
                 merge_audio_to_video(files[0], files[1], outName)
                 break
 
