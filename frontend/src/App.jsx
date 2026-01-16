@@ -19,7 +19,7 @@ function App() {
                 </h2>
             </header>
 
-            <h1>YouTube Video Downloader</h1>
+            <h2>YouTube Video Downloader</h2>
 
             <div className='input-container'>
                 <input ref={inputRef} placeholder='Enter URL here'/>

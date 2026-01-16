@@ -50,7 +50,7 @@ input{
 }
 
 #GETButton{
-    width: fit-content;
+    width: 75px;
     border: none;
     border-radius: 3px;
     height: 35px;
