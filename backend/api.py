@@ -11,10 +11,10 @@ INPUT_DIR = BASE_DIR / "in"
 OUTPUT_DIR = BASE_DIR / "out"
 
 app = FastAPI()
-origins = ["http://localhost:5173/", 
-           "http://127.0.0.1:5173/", 
-           "https://localhost:5173/",
-           "https://127.0.0.1:5173/"]
+origins = ["http://localhost:5173", 
+           "http://127.0.0.1:5173", 
+           "https://localhost:5173",
+           "https://127.0.0.1:5173"]
 
 app.add_middleware(CORSMiddleware,
                    allow_origins=origins,
@@ -84,7 +84,8 @@ def outFile_generator(fileName:str):
     try:
         for file in file_dir.iterdir():
             with open(str(file), mode="rb") as out:
-                yield from out
+                while chunk := out.read(1024*1024):
+                    yield chunk
 
     finally:
         for item in file_dir.iterdir():
@@ -107,8 +108,13 @@ def send_video(url:str, qual:str, res:Response):
         
         # uses the generator function to stream the file to 
         return StreamingResponse(outFile_generator(fileName), 
-                                media_type="video/mp4")
+                                media_type="video/mp4", 
+                                headers={
+                                    "Content-Disposition" : f'attachment; filename="{fileName}"',
+                                    "Accept-Ranges" : "bytes"
+                                })
     except MergeError as e:
+        print("Check merge_audio_to_video twinnem")
         res.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return {
             "message" : "something went wrong while retrieving your video"

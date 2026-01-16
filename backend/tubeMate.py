@@ -19,6 +19,8 @@ def clearInDir(in_dir: Path):
 
 def merge_audio_to_video(vid, aud, outname):
     out = OUTPUT_DIR / outname / f"{outname}.mp4"
+    
+    out.parent.mkdir(parents=True, exist_ok=True)
 
     command = [
         'ffmpeg.exe', '-i', vid,
