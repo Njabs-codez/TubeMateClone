@@ -1,9 +1,10 @@
 from pytubefix import YouTube
 from pathlib import Path
 from fastapi import FastAPI, Response, status
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from tubeMate import merge_audio_to_video, MergeError
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,10 +12,8 @@ INPUT_DIR = BASE_DIR / "in"
 OUTPUT_DIR = BASE_DIR / "out"
 
 app = FastAPI()
-origins = ["http://localhost:5173", 
-           "http://127.0.0.1:5173", 
-           "https://localhost:5173",
-           "https://127.0.0.1:5173"]
+origins = [os.getenv('FRONTEND_URL', 
+                     'http://localhost:5173')]
 
 app.add_middleware(CORSMiddleware,
                    allow_origins=origins,
