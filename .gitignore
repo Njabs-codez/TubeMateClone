@@ -6,3 +6,10 @@
 /frontend/README.md
 /frontend/.gitignore
 /frontend/.env
+/frontend/.dockerignore
+/backend/.dockerignore
+/backend/Dockerfile
+/frontend/Dockerfile
+/backend/requirements.txt
+/backend/README.Docker.md
+compose.yaml
