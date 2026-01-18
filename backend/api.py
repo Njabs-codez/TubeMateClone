@@ -4,6 +4,7 @@ from fastapi import FastAPI, Response, status
 from fastapi.responses import StreamingResponse
 from tubeMate import merge_audio_to_video, MergeError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 
 
@@ -29,11 +30,11 @@ def validate_url(url):
         return True
     return False
 
-@app.get('/')
+@app.get('/api')
 def hello_world():
     return {"greetings" : "Hello, World!"}
 
-@app.get("/get-video-info", status_code=200)
+@app.get("/api/get-video-info", status_code=200)
 def video_info(url:str, res:Response):
     print(url)
     if not validate_url(url):
@@ -95,7 +96,7 @@ def outFile_generator(fileName:str):
                 item.unlink()
         file_dir.rmdir()
 
-@app.get("/get-video", status_code=200)
+@app.get("/api/get-video", status_code=200)
 def send_video(url:str, qual:str, res:Response):
     if not validate_url(url):
         res.status_code = status.HTTP_400_BAD_REQUEST
@@ -121,6 +122,12 @@ def send_video(url:str, qual:str, res:Response):
         return {
             "message" : "something went wrong while retrieving your video"
         }
+    
+static_dir = Path(__file__).parent.parent / "static"
+app.mount("/", StaticFiles(
+    directory=static_dir,
+    html=True
+))
     
 
     
