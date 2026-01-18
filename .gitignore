@@ -13,3 +13,4 @@
 /backend/requirements.txt
 /backend/README.Docker.md
 compose.yaml
+.env

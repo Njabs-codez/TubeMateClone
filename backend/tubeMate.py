@@ -1,7 +1,7 @@
 from pytubefix import YouTube
 import subprocess
 from pathlib import Path
-from fastapi.responses import FileResponse, StreamingResponse
+import platform
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 INPUT_DIR = BASE_DIR / "in"
@@ -22,8 +22,10 @@ def merge_audio_to_video(vid, aud, outname):
     
     out.parent.mkdir(parents=True, exist_ok=True)
 
+    ffmpeg_cmd = 'ffmpeg.exe' if platform.system() == 'Windows' else 'ffmpeg'
+
     command = [
-        'ffmpeg.exe', '-i', vid,
+        ffmpeg_cmd, '-i', vid,
         '-i', aud, '-c:v', 'libx264', '-pix_fmt',
         'yuv420p','-c:a', 'copy', str(out)
     ]

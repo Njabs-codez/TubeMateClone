@@ -13,7 +13,10 @@ OUTPUT_DIR = BASE_DIR / "out"
 
 app = FastAPI()
 origins = [os.getenv('FRONTEND_URL', 
-                     'http://localhost:5173')]
+                     'http://localhost:5173'),
+            "http://localhost:3000",
+            "http://frontend:3000"]
+
 
 app.add_middleware(CORSMiddleware,
                    allow_origins=origins,

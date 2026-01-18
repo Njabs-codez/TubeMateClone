@@ -38,6 +38,7 @@ function PreviewArea(props){
             }
             catch(err){
                 let fake = null;
+                console.log(err.message);
                 if(err.message.includes("Bad Request")){
                     fake = {
                         thumbnail : userErrorImage,
