@@ -1,14 +1,4 @@
 ARG PYTHON_VERSION=3.13.3
-FROM node:22-alpine AS frontend-build
-
-WORKDIR /frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
-RUN ls -la /frontend/  # Debug: see what was created
-
-
 # Python stage
 FROM python:${PYTHON_VERSION}-slim
 
@@ -27,7 +17,7 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-COPY backend/requirements.txt .
+COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=backend/requirements.txt,target=requirements.txt \
@@ -38,14 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 RUN mkdir -p in out && chown appuser:appuser in out
 
-COPY backend/ ./api-scripts
-
-# Copy built frontend from Node build stage
-COPY --from=frontend-build /frontend/dist ./static
-
-RUN chown -R appuser:appuser /app
-
-WORKDIR /app/api-scripts
+COPY . ./api-scripts
 
 USER appuser
 

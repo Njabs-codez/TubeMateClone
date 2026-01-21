@@ -4,7 +4,6 @@ from fastapi import FastAPI, Response, status
 from fastapi.responses import StreamingResponse
 from tubeMate import merge_audio_to_video, MergeError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 import os
 
 
@@ -123,11 +122,6 @@ def send_video(url:str, qual:str, res:Response):
             "message" : "something went wrong while retrieving your video"
         }
     
-static_dir = Path(__file__).parent.parent / "static"
-app.mount("/", StaticFiles(
-    directory=static_dir,
-    html=True
-))
     
 
     
