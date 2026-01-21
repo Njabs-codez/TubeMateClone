@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import serverErrorImage from './assets/download.jpg'
 import userErrorImage from './assets/MJNoNoNo.jpg'
  
-const API_URL = "/api";
+const API_URL = import.meta.VITE_API_URL || "http://localhost:8000";
 
 function PreviewArea(props){
 
@@ -16,7 +16,7 @@ function PreviewArea(props){
         async function getVidInfo() {
             if(props.url === '') return;
             try{
-                let res = await fetch(`${API_URL}/get-video-info?url=${props.url}`, {
+                let res = await fetch(`${API_URL}/api/get-video-info?url=${props.url}`, {
                     signal : cont.signal
                 });
                 
@@ -74,7 +74,7 @@ function PreviewArea(props){
     function handleDownload(){
         if(selectValue === "") return;
 
-        fetch(`${API_URL}/get-video?url=${props.url}&qual=${selectValue}`)
+        fetch(`${API_URL}/api/get-video?url=${props.url}&qual=${selectValue}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error("Download failed");
