@@ -8,6 +8,5 @@
 /frontend/.env
 /frontend/.dockerignore
 /backend/.dockerignore
-/backend/requirements.txt
 /backend/README.Docker.md
 .env
